@@ -29,7 +29,7 @@ const getTotalSalesPerCustomer=async(req,res)=>{
       }
     });
 
-    // Fetch customer names for mapping
+   
     const customerIds = sales.map(s => s.customerId);
     const customers = await prisma.customer.findMany({
       where: {
@@ -37,7 +37,7 @@ const getTotalSalesPerCustomer=async(req,res)=>{
       }
     });
 
-    // Combine data
+   
     const result = sales.map(sale => {
       const customer = customers.find(c => c.id === sale.customerId);
       return {
@@ -78,7 +78,7 @@ const getByDateRangeAndStatus=async(req,res)=>{
       }
     });
 
-    // Fetch related customer names
+   
     const customerIds = filteredSales.map(s => s.customerId);
     const customers = await prisma.customer.findMany({
       where: {
@@ -86,7 +86,7 @@ const getByDateRangeAndStatus=async(req,res)=>{
       }
     });
 
-    // Combine with customer data
+ 
     const result = filteredSales.map(sale => {
       const customer = customers.find(c => c.id === sale.customerId);
       return {
@@ -100,26 +100,33 @@ const getByDateRangeAndStatus=async(req,res)=>{
 
 }
 
-
+//get daily sales
 const getDailySales=async(req,res)=>{
    const today = new Date();
 const yyyy = today.getFullYear();
-const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months start from 0
+const mm = String(today.getMonth() + 1).padStart(2, '0'); 
 const dd = String(today.getDate()).padStart(2, '0');
 
-// Format: YYYY-MM-DD
+
 const todayDate = `${yyyy}-${mm}-${dd}`;
 
 console.log("todayDate",todayDate);
+const startOfDay = new Date(`${todayDate}T00:00:00.000Z`);
+const endOfDay = new Date(`${todayDate}T23:59:59.999Z`);
+
 const sales = await prisma.order.groupBy({
-      by: ['orderDate'],
-      where: {
-        orderDate:todayDate
-      },
-      _sum: {
-        totalAmount: true
-      }
-    });
+  by: ['orderDate'],
+  where: {
+    orderDate: {
+      gte: startOfDay,
+      lte: endOfDay
+    }
+  },
+  _sum: {
+    totalAmount: true
+  }
+});
+
 
     res.json(sales)
 
