@@ -1,0 +1,54 @@
+const prisma=require('../db/prisma')
+
+const getAllorders=async(req,res)=>{
+const orders=await prisma.order.findMany({
+     orderBy: {
+    orderDate: 'desc'
+  },
+  include: {
+    customer: true,
+    product: true
+  }
+})
+res.json(orders)
+
+
+}
+
+
+const getTotalSalesPerCustomer=async(req,res)=>{
+    const sales = await prisma.order.groupBy({
+      by: ['customerId'],
+      _sum: {
+        totalAmount: true
+      },
+      orderBy: {
+        _sum: {
+          totalAmount: 'desc'
+        }
+      }
+    });
+
+    // Fetch customer names for mapping
+    const customerIds = sales.map(s => s.customerId);
+    const customers = await prisma.customer.findMany({
+      where: {
+        id: { in: customerIds }
+      }
+    });
+
+    // Combine data
+    const result = sales.map(sale => {
+      const customer = customers.find(c => c.id === sale.customerId);
+      return {
+        customerId: sale.customerId,
+        customerName: customer?.name || 'Unknown',
+        totalSales: sale._sum.totalAmount
+      };
+    });
+
+    res.json(result);
+
+}
+
+module.exports={getAllorders,getTotalSalesPerCustomer}
