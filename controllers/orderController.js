@@ -91,7 +91,7 @@ const getByDateRangeAndStatus=async(req,res)=>{
       const customer = customers.find(c => c.id === sale.customerId);
       return {
         customerId: sale.customerId,
-        customerName: customer?.name || 'Unknown',
+        customerName: customer,
         totalSales: sale._sum.totalAmount
       };
     });
